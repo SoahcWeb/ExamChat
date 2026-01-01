@@ -2,8 +2,14 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title inertia>Mini ChatGPT</title>
-    <?php echo app('Illuminate\Foundation\Vite')('resources/js/app.js'); ?>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- CSRF token pour Inertia et Axios -->
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+
+    <title inertia><?php echo e(config('app.name', 'Mini ChatGPT')); ?></title>
+
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/js/app.js']); ?>
     <?php if (!isset($__inertiaSsrDispatched)) { $__inertiaSsrDispatched = true; $__inertiaSsrResponse = app(\Inertia\Ssr\Gateway::class)->dispatch($page); }  if ($__inertiaSsrResponse) { echo $__inertiaSsrResponse->head; } ?>
 </head>
 <body class="bg-gray-100">
