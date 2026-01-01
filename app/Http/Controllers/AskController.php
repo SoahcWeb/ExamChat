@@ -20,50 +20,57 @@ class AskController extends Controller
      */
     public function index()
     {
-        // On peut aussi envoyer la liste des modèles à l'affichage initial si besoin
         $models = $this->askService->getModels();
-        return Inertia::render('Ask', [
+
+        // Formatage simple pour Vue
+        $formattedModels = [];
+        if (isset($models['data'])) {
+            foreach ($models['data'] as $model) {
+                $formattedModels[] = ['id' => $model['id']];
+            }
+        }
+
+        return Inertia::render('Ask/Index', [
+            'models' => $formattedModels,
+            'selectedModel' => $formattedModels[0]['id'] ?? null,
+            'message' => null,
             'response' => null,
-            'models' => $models,
+            'error' => null,
         ]);
     }
 
     /**
-     * Récupère la liste des modèles pour Vue
-     */
-    public function getModels()
-    {
-        $models = $this->askService->getModels();
-
-        // Assurer un formatage simple {id: "..."} pour Vue
-        $formatted = [];
-        if (isset($models['data'])) {
-            foreach ($models['data'] as $model) {
-                $formatted[] = ['id' => $model['id']];
-            }
-        }
-
-        return response()->json(['models' => $formatted]);
-    }
-
-    /**
-     * Traite l'envoi d'une question depuis Vue
+     * Traite l'envoi d'une question (Inertia)
      */
     public function ask(Request $request)
     {
         $request->validate([
-            'question' => 'required|string',
+            'message' => 'required|string',
             'model' => 'required|string',
         ]);
 
         $response = $this->askService->sendMessage(
-            $request->input('question'),
+            $request->input('message'),
             $request->input('model')
         );
 
-        // extraire uniquement le texte de l'IA
-        $text = $response['choices'][0]['message']['content'] ?? 'Pas de réponse.';
+        $text = $response['choices'][0]['message']['content'] ?? null;
 
-        return response()->json(['response' => $text]);
+        // Renvoie les props directement à Inertia pour mise à jour du composant
+        $models = $this->askService->getModels();
+        $formattedModels = [];
+        if (isset($models['data'])) {
+            foreach ($models['data'] as $model) {
+                $formattedModels[] = ['id' => $model['id']];
+            }
+        }
+
+        return Inertia::render('Ask/Index', [
+            'models' => $formattedModels,
+            'selectedModel' => $request->input('model'),
+            'message' => $request->input('message'),
+            'response' => $text,
+            'error' => null,
+        ]);
     }
 }
