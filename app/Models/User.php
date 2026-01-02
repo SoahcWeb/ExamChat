@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'selected_model', // ajouté pour Exercice 2
     ];
 
     /**
