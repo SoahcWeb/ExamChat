@@ -50,7 +50,7 @@ onUnmounted(() => {
 
                 <div
                     v-if="!twoFactorEnabled"
-                    class="flex flex-col items-start justify-start space-y-4"
+                    class="space-y-4 flex flex-col items-start justify-start"
                 >
                     <Badge variant="destructive">Disabled</Badge>
 
@@ -83,7 +83,7 @@ onUnmounted(() => {
 
                 <div
                     v-else
-                    class="flex flex-col items-start justify-start space-y-4"
+                    class="space-y-4 flex flex-col items-start justify-start"
                 >
                     <Badge variant="default">Enabled</Badge>
 
