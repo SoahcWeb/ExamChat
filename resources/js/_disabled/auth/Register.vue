@@ -22,10 +22,10 @@ import { Form, Head } from '@inertiajs/vue3';
             v-bind="store.form()"
             :reset-on-success="['password', 'password_confirmation']"
             v-slot="{ errors, processing }"
-            class="flex flex-col gap-6"
+            class="gap-6 flex flex-col"
         >
-            <div class="grid gap-6">
-                <div class="grid gap-2">
+            <div class="gap-6 grid">
+                <div class="gap-2 grid">
                     <Label for="name">Name</Label>
                     <Input
                         id="name"
@@ -40,7 +40,7 @@ import { Form, Head } from '@inertiajs/vue3';
                     <InputError :message="errors.name" />
                 </div>
 
-                <div class="grid gap-2">
+                <div class="gap-2 grid">
                     <Label for="email">Email address</Label>
                     <Input
                         id="email"
@@ -54,7 +54,7 @@ import { Form, Head } from '@inertiajs/vue3';
                     <InputError :message="errors.email" />
                 </div>
 
-                <div class="grid gap-2">
+                <div class="gap-2 grid">
                     <Label for="password">Password</Label>
                     <Input
                         id="password"
@@ -68,7 +68,7 @@ import { Form, Head } from '@inertiajs/vue3';
                     <InputError :message="errors.password" />
                 </div>
 
-                <div class="grid gap-2">
+                <div class="gap-2 grid">
                     <Label for="password_confirmation">Confirm password</Label>
                     <Input
                         id="password_confirmation"
@@ -94,7 +94,7 @@ import { Form, Head } from '@inertiajs/vue3';
                 </Button>
             </div>
 
-            <div class="text-center text-sm text-muted-foreground">
+            <div class="text-sm text-muted-foreground text-center">
                 Already have an account?
                 <TextLink
                     :href="login()"

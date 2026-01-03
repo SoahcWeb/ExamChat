@@ -45,7 +45,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                     class="space-y-6"
                     v-slot="{ errors, processing, recentlySuccessful }"
                 >
-                    <div class="grid gap-2">
+                    <div class="gap-2 grid">
                         <Label for="current_password">Current password</Label>
                         <Input
                             id="current_password"
@@ -58,7 +58,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                         <InputError :message="errors.current_password" />
                     </div>
 
-                    <div class="grid gap-2">
+                    <div class="gap-2 grid">
                         <Label for="password">New password</Label>
                         <Input
                             id="password"
@@ -71,7 +71,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                         <InputError :message="errors.password" />
                     </div>
 
-                    <div class="grid gap-2">
+                    <div class="gap-2 grid">
                         <Label for="password_confirmation"
                             >Confirm password</Label
                         >
@@ -86,7 +86,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                         <InputError :message="errors.password_confirmation" />
                     </div>
 
-                    <div class="flex items-center gap-4">
+                    <div class="gap-4 flex items-center">
                         <Button
                             :disabled="processing"
                             data-test="update-password-button"

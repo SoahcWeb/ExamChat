@@ -39,9 +39,9 @@ const currentPath = typeof window !== undefined ? window.location.pathname : '';
             description="Manage your profile and account settings"
         />
 
-        <div class="flex flex-col lg:flex-row lg:space-x-12">
-            <aside class="w-full max-w-xl lg:w-48">
-                <nav class="flex flex-col space-y-1 space-x-0">
+        <div class="lg:flex-row lg:space-x-12 flex flex-col">
+            <aside class="max-w-xl lg:w-48 w-full">
+                <nav class="space-y-1 space-x-0 flex flex-col">
                     <Button
                         v-for="item in sidebarNavItems"
                         :key="toUrl(item.href)"
@@ -62,7 +62,7 @@ const currentPath = typeof window !== undefined ? window.location.pathname : '';
 
             <Separator class="my-6 lg:hidden" />
 
-            <div class="flex-1 md:max-w-2xl">
+            <div class="md:max-w-2xl flex-1">
                 <section class="max-w-xl space-y-12">
                     <slot />
                 </section>

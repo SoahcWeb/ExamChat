@@ -66,7 +66,7 @@ const codeValue = computed<string>(() => code.value.join(''));
                 >
                     <input type="hidden" name="code" :value="codeValue" />
                     <div
-                        class="flex flex-col items-center justify-center space-y-3 text-center"
+                        class="space-y-3 flex flex-col items-center justify-center text-center"
                     >
                         <div class="flex w-full items-center justify-center">
                             <PinInput
@@ -92,11 +92,11 @@ const codeValue = computed<string>(() => code.value.join(''));
                     <Button type="submit" class="w-full" :disabled="processing"
                         >Continue</Button
                     >
-                    <div class="text-center text-sm text-muted-foreground">
+                    <div class="text-sm text-muted-foreground text-center">
                         <span>or you can </span>
                         <button
                             type="button"
-                            class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                            class="text-foreground decoration-neutral-300 ease-out dark:decoration-neutral-500 underline underline-offset-4 transition-colors duration-300 hover:decoration-current!"
                             @click="() => toggleRecoveryMode(clearErrors)"
                         >
                             {{ authConfigContent.toggleText }}
@@ -124,11 +124,11 @@ const codeValue = computed<string>(() => code.value.join(''));
                         >Continue</Button
                     >
 
-                    <div class="text-center text-sm text-muted-foreground">
+                    <div class="text-sm text-muted-foreground text-center">
                         <span>or you can </span>
                         <button
                             type="button"
-                            class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                            class="text-foreground decoration-neutral-300 ease-out dark:decoration-neutral-500 underline underline-offset-4 transition-colors duration-300 hover:decoration-current!"
                             @click="() => toggleRecoveryMode(clearErrors)"
                         >
                             {{ authConfigContent.toggleText }}
