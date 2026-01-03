@@ -90,21 +90,17 @@ onBeforeUnmount(() =>
 <template>
     <div
         ref="containerRef"
-        class="p-2 space-y-4 messages-container flex flex-1 flex-col overflow-y-auto"
+        class="p-2 space-y-4 messages-container flex flex-1 flex-col overflow-y-auto bg-[#0F0F2F]"
     >
         <!-- Message si aucun message -->
-        <p v-if="!messages.length" class="text-gray-400 italic">
+        <p v-if="!messages.length" class="italic text-[#52c5ff]">
             Aucun message pour le moment.
         </p>
 
         <div
             v-for="m in messages"
             :key="m.id"
-            class="max-w-lg p-2 rounded break-words"
-            :class="{
-                'bg-blue-100 self-end': m.role === 'user',
-                'bg-gray-100 self-start': m.role === 'assistant',
-            }"
+            class="max-w-lg p-2 rounded break-words text-[#52c5ff]"
         >
             <div v-html="md.render(m.content)"></div>
         </div>

@@ -8,23 +8,17 @@ use Inertia\Inertia;
 
 // -----------------------------
 // Ask (mini chat actuel)
-// -----------------------------
 Route::get('/ask', [AskController::class, 'index'])->name('ask.index');
 Route::post('/ask', [AskController::class, 'ask'])->name('ask.send');
 Route::get('/ask/models', [AskController::class, 'getModels']);
 
 // -----------------------------
 // Chat type ChatGPT (Inertia)
-// -----------------------------
-Route::get('/chat', [ConversationController::class, 'index'])
-    ->name('chat.index');
-
-Route::get('/chat/{conversation}', [ConversationController::class, 'show'])
-    ->name('chat.show');
+Route::get('/chat', [ConversationController::class, 'index'])->name('chat.index');
+Route::get('/chat/{conversation}', [ConversationController::class, 'show'])->name('chat.show');
 
 // -----------------------------
 // API JSON pour le chat (Axios)
-// -----------------------------
 Route::prefix('api/chat')->group(function () {
 
     // Liste toutes les conversations
@@ -47,17 +41,23 @@ Route::prefix('api/chat')->group(function () {
 });
 
 // -----------------------------
-// Page par défaut
-// -----------------------------
+// Landing page + Legal
 Route::get('/', function () {
-    return redirect()->route('chat.index');
-});
+    return Inertia::render('Landing'); // Landing.vue
+})->name('landing');
+
+Route::get('/legal', function () {
+    return Inertia::render('Legal'); // Legal.vue
+})->name('legal');
 
 // -----------------------------
 // Test Inertia
-// -----------------------------
 Route::get('/hello', function () {
     return Inertia::render('Hello', [
         'message' => 'Hello World from Laravel + Inertia!'
     ]);
+});
+
+Route::get('/test', function () {
+    return Inertia::render('Test');
 });

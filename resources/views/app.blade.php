@@ -9,7 +9,7 @@
 
     <title inertia>{{ config('app.name', 'Mini ChatGPT') }}</title>
 
-    @vite(['resources/js/app.js'])
+    @vite('resources/js/app.ts')
     @inertiaHead
 </head>
 <body class="bg-gray-100">
