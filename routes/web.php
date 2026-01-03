@@ -5,6 +5,7 @@ use App\Http\Controllers\AskController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MessageController;
 use Inertia\Inertia;
+use Illuminate\Http\Request;
 
 // -----------------------------
 // Ask (mini chat actuel)
@@ -20,44 +21,47 @@ Route::get('/chat/{conversation}', [ConversationController::class, 'show'])->nam
 // -----------------------------
 // API JSON pour le chat (Axios)
 Route::prefix('api/chat')->group(function () {
-
-    // Liste toutes les conversations
     Route::get('/', [ConversationController::class, 'listJson']);
-
-    // Affiche une conversation spécifique avec ses messages
     Route::get('/{conversation}', [ConversationController::class, 'showJson']);
-
-    // Crée une nouvelle conversation
     Route::post('/', [ConversationController::class, 'storeJson']);
-
-    // Envoie un message dans une conversation
     Route::post('/{conversation}/messages', [MessageController::class, 'store']);
-
-    // Met à jour le modèle utilisé pour une conversation
     Route::patch('/{conversation}/model', [ConversationController::class, 'updateModel']);
-
-    // ✅ Génération automatique du titre
     Route::post('/{conversation}/generate-title', [ConversationController::class, 'generateTitle']);
 });
 
 // -----------------------------
-// Landing page + Legal
-Route::get('/', function () {
-    return Inertia::render('Landing'); // Landing.vue
-})->name('landing');
+// Streaming SSE pour token par token
+Route::get('/chat/{conversation}/stream', function($conversationId, Request $request) {
+    $userMessage = $request->query('message', '');
+    $botMessageId = $request->query('messageId'); // <-- ID du message assistant
 
-Route::get('/legal', function () {
-    return Inertia::render('Legal'); // Legal.vue
-})->name('legal');
+    $ai = new \App\Services\OpenAIService();
+
+    return response()->stream(function() use ($ai, $botMessageId, $userMessage) {
+        foreach ($ai->streamResponse($botMessageId, $userMessage) as $token) {
+            // ⚡ Met à jour le message assistant en base
+            \App\Models\Message::where('id', $botMessageId)
+                ->update(['content' => \DB::raw("CONCAT(content, '" . addslashes($token) . "')")]);
+
+            // ⚡ Envoie le token SSE au frontend
+            echo "data: " . json_encode(['token' => $token]) . "\n\n";
+            ob_flush();
+            flush();
+        }
+    }, 200, [
+        'Content-Type' => 'text/event-stream',
+        'Cache-Control' => 'no-cache',
+        'Connection' => 'keep-alive',
+    ]);
+});
+
+// -----------------------------
+// Landing page + Legal
+Route::get('/', function () { return Inertia::render('Landing'); })->name('landing');
+Route::get('/legal', function () { return Inertia::render('Legal'); })->name('legal');
 
 // -----------------------------
 // Test Inertia
 Route::get('/hello', function () {
-    return Inertia::render('Hello', [
-        'message' => 'Hello World from Laravel + Inertia!'
-    ]);
-});
-
-Route::get('/test', function () {
-    return Inertia::render('Test');
+    return Inertia::render('Hello', ['message' => 'Hello World from Laravel + Inertia!']);
 });
