@@ -4,60 +4,87 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AskController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\CustomInstructionController;
 use Inertia\Inertia;
+use Illuminate\Http\Request;
 
 // -----------------------------
 // Ask (mini chat actuel)
-// -----------------------------
 Route::get('/ask', [AskController::class, 'index'])->name('ask.index');
 Route::post('/ask', [AskController::class, 'ask'])->name('ask.send');
 Route::get('/ask/models', [AskController::class, 'getModels']);
 
 // -----------------------------
 // Chat type ChatGPT (Inertia)
-// -----------------------------
-Route::get('/chat', [ConversationController::class, 'index'])
-    ->name('chat.index');
-
-Route::get('/chat/{conversation}', [ConversationController::class, 'show'])
-    ->name('chat.show');
+Route::get('/chat', [ConversationController::class, 'index'])->name('chat.index');
+Route::get('/chat/{conversation}', [ConversationController::class, 'show'])->name('chat.show');
 
 // -----------------------------
 // API JSON pour le chat (Axios)
-// -----------------------------
 Route::prefix('api/chat')->group(function () {
-
-    // Liste toutes les conversations
     Route::get('/', [ConversationController::class, 'listJson']);
-
-    // Affiche une conversation spécifique avec ses messages
     Route::get('/{conversation}', [ConversationController::class, 'showJson']);
-
-    // Crée une nouvelle conversation
     Route::post('/', [ConversationController::class, 'storeJson']);
-
-    // Envoie un message dans une conversation
     Route::post('/{conversation}/messages', [MessageController::class, 'store']);
-
-    // Met à jour le modèle utilisé pour une conversation
     Route::patch('/{conversation}/model', [ConversationController::class, 'updateModel']);
-
-    // ✅ Génération automatique du titre
     Route::post('/{conversation}/generate-title', [ConversationController::class, 'generateTitle']);
+
+    // 🔹 Nouvelle route pour supprimer une conversation
+    Route::delete('/{conversation}', [ConversationController::class, 'destroy'])->name('chat.destroy');
 });
 
 // -----------------------------
-// Page par défaut
-// -----------------------------
-Route::get('/', function () {
-    return redirect()->route('chat.index');
+// Streaming SSE pour token par token avec 3 assistants
+Route::get('/chat/{conversation}/stream', function($conversationId, Request $request) {
+    $userMessage = $request->query('message', '');
+    $botMessageId = $request->query('messageId');
+    $model = $request->query('model', 'CoachCréativité'); // Modèle par défaut
+
+    // 🔹 Définition des system prompts fixes pour chaque assistant
+    $systemPrompts = [
+        'PhilosopheModerne' => "🧠 Tu es Nethra Philosophe. Calme, réflexion profonde, peu d’emojis, analyse et structure les idées.",
+        'CoachCréativité'   => "🎨 Tu es Nethra Créatif. Idées originales, métaphores, énergie, propositions multiples.",
+        'custom'            => "🧩 Tu suis les instructions personnalisées de l’utilisateur."
+    ];
+
+    // Récupère le prompt correspondant au modèle choisi
+    $systemPrompt = $systemPrompts[$model] ?? $systemPrompts['CoachCréativité'];
+
+    // Combine le prompt système avec le message utilisateur
+    $finalMessage = $systemPrompt . "\n" . $userMessage;
+
+    $ai = new \App\Services\OpenAIService();
+
+    return response()->stream(function() use ($ai, $botMessageId, $finalMessage) {
+        foreach ($ai->streamResponse($botMessageId, $finalMessage) as $token) {
+            // ⚡ Met à jour le message assistant en base
+            \App\Models\Message::where('id', $botMessageId)
+                ->update(['content' => \DB::raw("CONCAT(content, '" . addslashes($token) . "')")]);
+
+            // ⚡ Envoie le token SSE au frontend
+            echo "data: " . json_encode(['token' => $token]) . "\n\n";
+            ob_flush();
+            flush();
+        }
+    }, 200, [
+        'Content-Type' => 'text/event-stream',
+        'Cache-Control' => 'no-cache',
+        'Connection' => 'keep-alive',
+    ]);
 });
+
+// -----------------------------
+// Instructions personnalisées (accessibles sans login)
+Route::get('/settings/instructions', [CustomInstructionController::class, 'edit']);
+Route::post('/settings/instructions', [CustomInstructionController::class, 'update']);
+
+// -----------------------------
+// Landing page + Legal
+Route::get('/', function () { return Inertia::render('Landing'); })->name('landing');
+Route::get('/legal', function () { return Inertia::render('Legal'); })->name('legal');
 
 // -----------------------------
 // Test Inertia
-// -----------------------------
 Route::get('/hello', function () {
-    return Inertia::render('Hello', [
-        'message' => 'Hello World from Laravel + Inertia!'
-    ]);
+    return Inertia::render('Hello', ['message' => 'Hello World from Laravel + Inertia!']);
 });

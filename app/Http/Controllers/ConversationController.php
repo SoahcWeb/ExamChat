@@ -127,4 +127,18 @@ class ConversationController extends Controller
             'title' => $title,
         ]);
     }
+
+    /**
+     * 🗑 Supprime une conversation (JSON)
+     */
+    public function destroy(Conversation $conversation)
+    {
+        $conversation->messages()->delete(); // Supprime tous les messages liés
+        $conversation->delete();             // Supprime la conversation
+
+        return response()->json([
+            'success' => true,
+            'id' => $conversation->id,
+        ]);
+    }
 }
