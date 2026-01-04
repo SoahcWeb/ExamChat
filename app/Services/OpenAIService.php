@@ -12,19 +12,37 @@ class OpenAIService
         $apiKey = env('OPENROUTER_API_KEY');
         $model  = env('OPENROUTER_MODEL', 'openai/gpt-4o-mini');
 
+        // Récupérer les instructions personnalisées depuis la session
+        $instructions = session('custom_instructions');
+
+        // Préparer les messages
+        $messages = [];
+
+        // 1️⃣ Ajouter instructions personnalisées si elles existent
+        if ($instructions) {
+            $messages[] = [
+                'role' => 'system',
+                'content' => $instructions
+            ];
+        } else {
+            // Message système par défaut
+            $messages[] = [
+                'role' => 'system',
+                'content' => 'Tu es un assistant intelligent, clair et utile.'
+            ];
+        }
+
+        // 2️⃣ Ajouter le message utilisateur
+        $messages[] = [
+            'role' => 'user',
+            'content' => $userMessage
+        ];
+
+        // 3️⃣ Payload pour OpenRouter
         $payload = [
             'model' => $model,
             'stream' => true,
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => 'Tu es un assistant intelligent, clair et utile.'
-                ],
-                [
-                    'role' => 'user',
-                    'content' => $userMessage
-                ]
-            ],
+            'messages' => $messages,
         ];
 
         $ch = curl_init('https://openrouter.ai/api/v1/chat/completions');

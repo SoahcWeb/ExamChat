@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AskController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\CustomInstructionController;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
@@ -27,18 +28,35 @@ Route::prefix('api/chat')->group(function () {
     Route::post('/{conversation}/messages', [MessageController::class, 'store']);
     Route::patch('/{conversation}/model', [ConversationController::class, 'updateModel']);
     Route::post('/{conversation}/generate-title', [ConversationController::class, 'generateTitle']);
+
+    // 🔹 Nouvelle route pour supprimer une conversation
+    Route::delete('/{conversation}', [ConversationController::class, 'destroy'])->name('chat.destroy');
 });
 
 // -----------------------------
-// Streaming SSE pour token par token
+// Streaming SSE pour token par token avec 3 assistants
 Route::get('/chat/{conversation}/stream', function($conversationId, Request $request) {
     $userMessage = $request->query('message', '');
-    $botMessageId = $request->query('messageId'); // <-- ID du message assistant
+    $botMessageId = $request->query('messageId');
+    $model = $request->query('model', 'CoachCréativité'); // Modèle par défaut
+
+    // 🔹 Définition des system prompts fixes pour chaque assistant
+    $systemPrompts = [
+        'PhilosopheModerne' => "🧠 Tu es Nethra Philosophe. Calme, réflexion profonde, peu d’emojis, analyse et structure les idées.",
+        'CoachCréativité'   => "🎨 Tu es Nethra Créatif. Idées originales, métaphores, énergie, propositions multiples.",
+        'custom'            => "🧩 Tu suis les instructions personnalisées de l’utilisateur."
+    ];
+
+    // Récupère le prompt correspondant au modèle choisi
+    $systemPrompt = $systemPrompts[$model] ?? $systemPrompts['CoachCréativité'];
+
+    // Combine le prompt système avec le message utilisateur
+    $finalMessage = $systemPrompt . "\n" . $userMessage;
 
     $ai = new \App\Services\OpenAIService();
 
-    return response()->stream(function() use ($ai, $botMessageId, $userMessage) {
-        foreach ($ai->streamResponse($botMessageId, $userMessage) as $token) {
+    return response()->stream(function() use ($ai, $botMessageId, $finalMessage) {
+        foreach ($ai->streamResponse($botMessageId, $finalMessage) as $token) {
             // ⚡ Met à jour le message assistant en base
             \App\Models\Message::where('id', $botMessageId)
                 ->update(['content' => \DB::raw("CONCAT(content, '" . addslashes($token) . "')")]);
@@ -54,6 +72,11 @@ Route::get('/chat/{conversation}/stream', function($conversationId, Request $req
         'Connection' => 'keep-alive',
     ]);
 });
+
+// -----------------------------
+// Instructions personnalisées (accessibles sans login)
+Route::get('/settings/instructions', [CustomInstructionController::class, 'edit']);
+Route::post('/settings/instructions', [CustomInstructionController::class, 'update']);
 
 // -----------------------------
 // Landing page + Legal
