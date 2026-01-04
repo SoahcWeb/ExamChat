@@ -15,7 +15,7 @@
           garder le focus et prendre des décisions plus claires.
         </p>
         <a
-          href="/chat"
+          href="/chat/models"
           class="inline-block px-8 py-4 font-semibold text-black transition bg-[#C96BFF] rounded-xl hover:shadow-[0_0_25px_rgba(201,107,255,0.6)]"
         >
           Découvrir Nethra.IA
