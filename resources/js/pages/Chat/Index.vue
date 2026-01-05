@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import HeaderFooterLayout from '@/layouts/HeaderFooterLayout.vue';
 import Conversation from './Conversation.vue';
@@ -19,6 +19,7 @@ interface ConversationType {
     messages?: MessageType[];
 }
 
+// États
 const conversations = ref<ConversationType[]>([]);
 const activeConversation = ref<ConversationType | null>(null);
 const activeModel = ref('gpt-3.5-turbo');
@@ -30,13 +31,28 @@ if (tokenMeta) axios.defaults.headers.common['X-CSRF-TOKEN'] = tokenMeta.getAttr
 
 const axiosConfig = { headers: { Accept: 'application/json' } };
 
+// Modèles preset
 const presetModels = [
-    { id: 'CoachCréativité', title: 'Nethra Créativité' },
-    { id: 'PhilosopheModerne', title: 'Nethra Philosophe' },
-    { id: 'StratègeDeVie', title: 'Nethra Stratège' },
-    { id: 'custom', title: 'Nethra Personnalisé' },
+    { id: 'CoachCréativité', title: 'Nethra Créativité', description: 'Stimule tes idées et structure tes projets créatifs avec des méthodes concrètes.' },
+    { id: 'PhilosopheModerne', title: 'Nethra Philosophe', description: 'Réfléchis sur tes valeurs et tes choix, et applique la philosophie à ta vie quotidienne.' },
+    { id: 'StratègeDeVie', title: 'Nethra Stratège', description: 'Planifie et organise ta vie avec des étapes claires pour atteindre tes objectifs personnels et professionnels.' },
+    { id: 'custom', title: 'Nethra Personnalisé', description: 'Crée ton propre assistant selon tes besoins uniques. Définis le ton, le style, les domaines de spécialité et la manière dont Nethra doit t’accompagner.' },
 ];
 
+// Query string
+const urlParams = new URLSearchParams(window.location.search);
+const initialConversationId = urlParams.get('conversation_id');
+const initialModelFromUrl = urlParams.get('model');
+
+if (initialModelFromUrl) activeModel.value = initialModelFromUrl;
+
+// Description du modèle actif
+const activeModelDescription = computed(() => {
+    const model = presetModels.find(m => m.id === activeModel.value);
+    return model ? model.description : '';
+});
+
+// Fonctions
 async function fetchConversations() {
     try {
         const res = await axios.get('/api/chat', axiosConfig);
@@ -74,17 +90,14 @@ async function selectConversation(convo: ConversationType) {
 
 async function newConversation() {
     try {
-        const res = await axios.post('/api/chat',
-            {
-                title: 'Nouvelle conversation',
-                model_used: activeModel.value
-            },
+        const res = await axios.post(
+            '/api/chat',
+            { title: 'Nouvelle conversation', model_used: activeModel.value },
             axiosConfig
         );
         if (res.data) {
             res.data.messages = [];
             res.data.model_used = activeModel.value;
-
             conversations.value.unshift(res.data);
             await selectConversation(res.data);
         }
@@ -139,23 +152,32 @@ async function deleteConversation(conversationId: number) {
     if (!confirm('Voulez-vous vraiment supprimer cette conversation ?')) return;
 
     try {
-        await axios.delete(`/api/chat/${conversationId}`, axiosConfig);
-
-        // Retire la conversation de la liste
         conversations.value = conversations.value.filter(c => c.id !== conversationId);
-
-        // Reset activeConversation si nécessaire
         if (activeConversation.value?.id === conversationId) {
             activeConversation.value = conversations.value[0] || null;
             if (activeConversation.value) await loadConversation(activeConversation.value.id);
         }
+        await axios.delete(`/api/chat/${conversationId}`, axiosConfig);
     } catch (err) {
         console.error('Erreur suppression conversation :', err);
     }
 }
 
-onMounted(() => {
-    fetchConversations();
+// Mounted
+onMounted(async () => {
+    await fetchConversations();
+
+    if (initialConversationId) {
+        const convo = conversations.value.find(c => c.id === Number(initialConversationId));
+        if (convo) {
+            await selectConversation(convo);
+        } else {
+            await loadConversation(Number(initialConversationId));
+        }
+    } else if (initialModelFromUrl) {
+        await newConversation();
+    }
+
     window.addEventListener('message-sent', async (e: any) => {
         const newMessage: MessageType = e.detail;
         if (!activeConversation.value) return;
@@ -170,38 +192,8 @@ onMounted(() => {
 
 <template>
   <HeaderFooterLayout>
-    <!-- CADRE CARTES MODÈLES -->
-    <div class="flex w-full gap-4 p-4 mb-4 rounded-xl">
-      <div
-        v-for="model in presetModels"
-        :key="model.id"
-        class="flex-1 p-6 rounded-xl bg-[#0F0F2F]/80 border border-[#0F0F2F]/50
-               transition-all duration-300
-               hover:border-[#C96BFF]
-               hover:shadow-[0_0_20px_rgba(201,107,255,0.45)]
-               cursor-pointer text-center"
-        @click="model.id === 'custom' ? goToCustomModel() : selectPresetModel(model.id)"
-      >
-        <h3 class="font-bold mb-2 text-[#52c5ff]">{{ model.title }}</h3>
-        <p class="text-sm text-[#E0E6F0]">
-          <span v-if="model.id === 'CoachCréativité'">
-            Stimule tes idées et structure tes projets créatifs avec des méthodes concrètes.
-          </span>
-          <span v-else-if="model.id === 'PhilosopheModerne'">
-            Réfléchis sur tes valeurs et tes choix, et applique la philosophie à ta vie quotidienne.
-          </span>
-          <span v-else-if="model.id === 'StratègeDeVie'">
-            Planifie et organise ta vie avec des étapes claires pour atteindre tes objectifs personnels et professionnels.
-          </span>
-          <span v-else>
-            Crée ton propre assistant selon tes besoins uniques. Définis le ton, le style, les domaines de spécialité et la manière dont Nethra doit t’accompagner.
-          </span>
-        </p>
-      </div>
-    </div>
-
-    <!-- SIDEBAR + CHAT -->
-    <div class="flex flex-1 min-h-[80vh] gap-4 p-4">
+    <!-- SIDEBAR + CHAT avec espace sous le header -->
+    <div class="flex flex-1 min-h-[80vh] gap-4 p-4 pt-8"> <!-- pt-16 ajoute l'espace sous le header -->
       <!-- SIDEBAR -->
       <aside class="w-1/4 bg-[#0F0F2F]/80 p-4 rounded-xl border border-[#0F4F8F] space-y-4">
         <button
@@ -224,10 +216,11 @@ onMounted(() => {
           </select>
         </div>
 
+        <p class="mt-1 text-sm text-[#E0E6F0]">{{ activeModelDescription }}</p>
+
         <ul v-if="conversations.length > 0" class="mt-2 space-y-2">
           <li
-            v-for="c in conversations"
-            :key="c.id"
+            v-for="c in conversations" :key="c.id"
             class="flex justify-between items-center p-2 rounded cursor-pointer transition hover:bg-[#0F4F8F]/50"
           >
             <span

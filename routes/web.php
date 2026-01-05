@@ -21,6 +21,19 @@ Route::get('/chat/models', function () {
 })->name('chat.models');
 
 // -----------------------------
+// Nouvelle conversation depuis un modèle sélectionné
+Route::get('/chat/new', function () {
+    // Crée une nouvelle conversation et redirige vers la page chat
+    $model = session('selectedModel', 'CoachCréativité'); // par défaut
+    $conversation = \App\Models\Conversation::create([
+        'title' => null,
+        'model_used' => $model,
+    ]);
+
+    return redirect()->route('chat.show', ['conversation' => $conversation->id]);
+})->name('chat.new');
+
+// -----------------------------
 // Chat type ChatGPT (Inertia)
 Route::get('/chat', [ConversationController::class, 'index'])->name('chat.index');
 Route::get('/chat/{conversation}', [ConversationController::class, 'show'])->name('chat.show');

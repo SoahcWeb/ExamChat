@@ -9,7 +9,7 @@
         <div class="flex items-center space-x-4">
           <img
             :src="logo"
-            alt="Nethra"
+            alt="Logo de Nethra.IA"
             class="w-10 h-10 sm:w-12 sm:h-12 md:w-[3.75rem] md:h-[3.75rem] lg:w-16 lg:h-16 object-contain"
           />
           <span class="text-2xl font-bold text-[#52c5ff]">Nethra.IA</span>
@@ -17,56 +17,41 @@
 
         <!-- NAV DESKTOP -->
         <nav class="relative items-center hidden space-x-6 md:flex">
-
-          <!-- ACCUEIL + DROPDOWN -->
-          <div
-            class="relative group"
-          >
-            <a
-              href="/#top"
-              class="hover:text-[#52c5ff] transition"
-            >
-              Accueil
-            </a>
-
-            <!-- MENU DÉROULANT -->
+          <div class="relative group">
+            <a href="/#top" class="hover:text-[#52c5ff] focus:outline focus:outline-2 focus:outline-[#52c5ff] transition">Accueil</a>
             <div
-              class="absolute left-0 mt-3 w-48 rounded-xl bg-[#0F0F2F] border border-[#0F4F8F]
-                     opacity-0 invisible group-hover:opacity-100 group-hover:visible
-                     transition-all duration-300 shadow-lg"
+              class="absolute left-0 mt-3 w-48 rounded-xl bg-[#0F0F2F] border border-[#0F4F8F] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 shadow-lg"
             >
-              <a href="/#features" class="block px-4 py-3 hover:bg-[#0F4F8F]/30 transition">Fonctionnalités</a>
-              <a href="/#pricing" class="block px-4 py-3 hover:bg-[#0F4F8F]/30 transition">Offres</a>
-              <a href="/#testimonials" class="block px-4 py-3 hover:bg-[#0F4F8F]/30 transition">Témoignages</a>
-              <a href="/#faq" class="block px-4 py-3 hover:bg-[#0F4F8F]/30 transition">FAQ</a>
+              <a href="/#features" class="block px-4 py-3 hover:bg-[#0F4F8F]/30 focus:bg-[#0F4F8F]/50 transition">Fonctionnalités</a>
+              <a href="/#pricing" class="block px-4 py-3 hover:bg-[#0F4F8F]/30 focus:bg-[#0F4F8F]/50 transition">Offres</a>
+              <a href="/#testimonials" class="block px-4 py-3 hover:bg-[#0F4F8F]/30 focus:bg-[#0F4F8F]/50 transition">Témoignages</a>
+              <a href="/#faq" class="block px-4 py-3 hover:bg-[#0F4F8F]/30 focus:bg-[#0F4F8F]/50 transition">FAQ</a>
             </div>
           </div>
-
-          <a href="/chat" class="hover:text-[#52c5ff] transition">Chat</a>
-          <a href="/legal" class="hover:text-[#52c5ff] transition">Mentions légales</a>
+          <a href="/chat" class="hover:text-[#52c5ff] focus:outline focus:outline-2 focus:outline-[#52c5ff] transition">Chat</a>
+          <a href="/legal" class="hover:text-[#52c5ff] focus:outline focus:outline-2 focus:outline-[#52c5ff] transition">Mentions légales</a>
         </nav>
 
         <!-- BOUTON MOBILE -->
         <button
           @click="mobileOpen = !mobileOpen"
           class="text-2xl md:hidden"
+          aria-label="Ouvrir le menu de navigation"
+          :aria-expanded="mobileOpen"
         >
           ☰
         </button>
       </div>
 
       <!-- MENU MOBILE -->
-      <div
-        v-show="mobileOpen"
-        class="md:hidden px-6 pb-6 space-y-2 border-t border-[#0F4F8F]"
-      >
-        <a href="/#top" class="block py-2" @click="closeMobile">Accueil</a>
-        <a href="/#features" class="block py-2" @click="closeMobile">Fonctionnalités</a>
-        <a href="/#pricing" class="block py-2" @click="closeMobile">Offres</a>
-        <a href="/#testimonials" class="block py-2" @click="closeMobile">Témoignages</a>
-        <a href="/#faq" class="block py-2" @click="closeMobile">FAQ</a>
-        <a href="/chat" class="block py-2" @click="closeMobile">Chat</a>
-        <a href="/legal" class="block py-2" @click="closeMobile">Mentions légales</a>
+      <div v-show="mobileOpen" class="md:hidden px-6 pb-6 space-y-2 border-t border-[#0F4F8F]">
+        <a href="/#top" class="block py-2 focus:outline focus:outline-2 focus:outline-[#52c5ff]" @click="closeMobile">Accueil</a>
+        <a href="/#features" class="block py-2 focus:outline focus:outline-2 focus:outline-[#52c5ff]" @click="closeMobile">Fonctionnalités</a>
+        <a href="/#pricing" class="block py-2 focus:outline focus:outline-2 focus:outline-[#52c5ff]" @click="closeMobile">Offres</a>
+        <a href="/#testimonials" class="block py-2 focus:outline focus:outline-2 focus:outline-[#52c5ff]" @click="closeMobile">Témoignages</a>
+        <a href="/#faq" class="block py-2 focus:outline focus:outline-2 focus:outline-[#52c5ff]" @click="closeMobile">FAQ</a>
+        <a href="/chat" class="block py-2 focus:outline focus:outline-2 focus:outline-[#52c5ff]" @click="closeMobile">Chat</a>
+        <a href="/legal" class="block py-2 focus:outline focus:outline-2 focus:outline-[#52c5ff]" @click="closeMobile">Mentions légales</a>
       </div>
     </header>
 
@@ -79,25 +64,23 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="px-6 py-6 text-center text-sm bg-[#0F0F2F] border-t border-[#0F4F8F] mt-auto">
+    <footer class="px-6 py-6 text-center text-sm bg-[#0F0F2F] border-t border-[#0F4F8F] mt-auto" role="contentinfo">
       <p>&copy; 2026 Nethra.IA — Assistant personnel intelligent</p>
-      <p class="mt-2 text-xs opacity-60">
-        Nethra.IA est un système d’intelligence artificielle. Les réponses peuvent contenir
-        des erreurs et ne remplacent pas un avis professionnel humain.
-      </p>
+      <p class="mt-2 text-xs opacity-60">Nethra.IA est un système d’intelligence artificielle. Les réponses peuvent contenir des erreurs et ne remplacent pas un avis professionnel humain.</p>
     </footer>
+
+    <!-- COOKIE BANNER RGPD -->
+    <CookieBanner />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import CookieBanner from '@/components/CookieBanner.vue';
 
 const logo = new URL('@/assets/icons/nethra.png', import.meta.url).href;
 const mobileOpen = ref(false);
-
-const closeMobile = () => {
-  mobileOpen.value = false;
-};
+const closeMobile = () => { mobileOpen.value = false; };
 </script>
 
 <style scoped>
