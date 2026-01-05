@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import HeaderFooterLayout from '@/layouts/HeaderFooterLayout.vue';
 import Conversation from './Conversation.vue';
 import MessageInput from './MessageInput.vue';
+
+// 🗑️ Import de l'icône poubelle
+import trashIcon from '@/assets/icons/poubelle.png';
 
 interface MessageType {
     id: number;
@@ -19,7 +22,6 @@ interface ConversationType {
     messages?: MessageType[];
 }
 
-// États
 const conversations = ref<ConversationType[]>([]);
 const activeConversation = ref<ConversationType | null>(null);
 const activeModel = ref('gpt-3.5-turbo');
@@ -31,7 +33,6 @@ if (tokenMeta) axios.defaults.headers.common['X-CSRF-TOKEN'] = tokenMeta.getAttr
 
 const axiosConfig = { headers: { Accept: 'application/json' } };
 
-// Modèles preset
 const presetModels = [
     { id: 'CoachCréativité', title: 'Nethra Créativité', description: 'Stimule tes idées et structure tes projets créatifs avec des méthodes concrètes.' },
     { id: 'PhilosopheModerne', title: 'Nethra Philosophe', description: 'Réfléchis sur tes valeurs et tes choix, et applique la philosophie à ta vie quotidienne.' },
@@ -39,20 +40,17 @@ const presetModels = [
     { id: 'custom', title: 'Nethra Personnalisé', description: 'Crée ton propre assistant selon tes besoins uniques. Définis le ton, le style, les domaines de spécialité et la manière dont Nethra doit t’accompagner.' },
 ];
 
-// Query string
 const urlParams = new URLSearchParams(window.location.search);
 const initialConversationId = urlParams.get('conversation_id');
 const initialModelFromUrl = urlParams.get('model');
 
 if (initialModelFromUrl) activeModel.value = initialModelFromUrl;
 
-// Description du modèle actif
 const activeModelDescription = computed(() => {
     const model = presetModels.find(m => m.id === activeModel.value);
     return model ? model.description : '';
 });
 
-// Fonctions
 async function fetchConversations() {
     try {
         const res = await axios.get('/api/chat', axiosConfig);
@@ -163,20 +161,14 @@ async function deleteConversation(conversationId: number) {
     }
 }
 
-// Mounted
 onMounted(async () => {
     await fetchConversations();
 
     if (initialConversationId) {
         const convo = conversations.value.find(c => c.id === Number(initialConversationId));
-        if (convo) {
-            await selectConversation(convo);
-        } else {
-            await loadConversation(Number(initialConversationId));
-        }
-    } else if (initialModelFromUrl) {
-        await newConversation();
-    }
+        if (convo) await selectConversation(convo);
+        else await loadConversation(Number(initialConversationId));
+    } else if (initialModelFromUrl) await newConversation();
 
     window.addEventListener('message-sent', async (e: any) => {
         const newMessage: MessageType = e.detail;
@@ -192,10 +184,9 @@ onMounted(async () => {
 
 <template>
   <HeaderFooterLayout>
-    <!-- SIDEBAR + CHAT avec espace sous le header -->
-    <div class="flex flex-1 min-h-[80vh] gap-4 p-4 pt-8"> <!-- pt-16 ajoute l'espace sous le header -->
+    <div class="flex flex-1 min-h-[80vh] gap-4 p-4 pt-8">
       <!-- SIDEBAR -->
-      <aside class="w-1/4 bg-[#0F0F2F]/80 p-4 rounded-xl border border-[#0F4F8F] space-y-4">
+      <aside class="w-1/4 bg-[#0F0F2F]/80 p-4 rounded-xl border border-[#0F4F8F] flex flex-col min-h-0 dashboard-scroll">
         <button
           @click="newConversation"
           class="w-full px-3 py-2 text-white bg-[#52c5ff] rounded-lg hover:bg-[#44b0f0] transition"
@@ -218,7 +209,7 @@ onMounted(async () => {
 
         <p class="mt-1 text-sm text-[#E0E6F0]">{{ activeModelDescription }}</p>
 
-        <ul v-if="conversations.length > 0" class="mt-2 space-y-2">
+        <ul v-if="conversations.length > 0" class="flex-1 min-h-0 mt-2 space-y-2 dashboard-scroll">
           <li
             v-for="c in conversations" :key="c.id"
             class="flex justify-between items-center p-2 rounded cursor-pointer transition hover:bg-[#0F4F8F]/50"
@@ -229,11 +220,14 @@ onMounted(async () => {
             >
               {{ c.title }}
             </span>
+
+            <!-- Bouton remplacé par image poubelle -->
             <button
               @click.stop="deleteConversation(c.id)"
-              class="px-2 py-1 ml-2 text-sm text-red-500 transition border border-red-500 rounded hover:text-red-700"
+              class="p-1 ml-2 rounded hover:bg-red-500/20"
+              title="Supprimer"
             >
-              Supprimer
+              <img :src="trashIcon" class="w-5 h-5" alt="Supprimer" />
             </button>
           </li>
         </ul>
@@ -242,7 +236,7 @@ onMounted(async () => {
       </aside>
 
       <!-- CHAT -->
-      <section class="flex flex-col w-3/4 space-y-4">
+      <section class="flex flex-col w-3/4 min-h-0">
         <p v-if="loadingConversation" class="italic text-gray-400">
           Chargement de la conversation...
         </p>
@@ -251,7 +245,7 @@ onMounted(async () => {
           Commencez une discussion
         </p>
 
-        <div v-else class="flex flex-col flex-1 space-y-4 bg-[#0F0F2F]/80 p-4 rounded-xl border border-[#0F4F8F]">
+        <div v-else class="flex flex-col flex-1 space-y-4 bg-[#0F0F2F]/80 p-4 rounded-xl border border-[#0F4F8F] min-h-0 dashboard-scroll">
           <Conversation :conversation="activeConversation" />
           <MessageInput :conversation="activeConversation" :model_used="activeConversation.model_used || activeModel" />
         </div>
@@ -259,3 +253,34 @@ onMounted(async () => {
     </div>
   </HeaderFooterLayout>
 </template>
+
+<style scoped>
+/* Scrollbar personnalisée */
+.dashboard-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 12px;
+  margin-right: -6px;
+}
+
+.dashboard-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dashboard-scroll::-webkit-scrollbar-track {
+  background: rgba(15,15,47,0.8);
+  border-radius: 8px;
+}
+
+.dashboard-scroll::-webkit-scrollbar-thumb {
+  background-color: #52c5ff;
+  border-radius: 8px;
+  border: 2px solid rgba(15,15,47,0.8);
+}
+
+.dashboard-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #52c5ff rgba(15,15,47,0.8);
+}
+</style>
