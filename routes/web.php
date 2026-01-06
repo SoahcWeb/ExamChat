@@ -15,6 +15,24 @@ Route::post('/ask', [AskController::class, 'ask'])->name('ask.send');
 Route::get('/ask/models', [AskController::class, 'getModels']);
 
 // -----------------------------
+// Sélection du modèle (page intermédiaire Inertia)
+Route::get('/chat/models', function () {
+    return Inertia::render('Chat/Models');
+})->name('chat.models');
+
+// -----------------------------
+// Nouvelle conversation depuis un modèle sélectionné
+Route::get('/chat/new', function () {
+    $model = session('selectedModel', 'CoachCréativité'); // par défaut
+    $conversation = \App\Models\Conversation::create([
+        'title' => null,
+        'model_used' => $model,
+    ]);
+
+    return redirect()->route('chat.show', ['conversation' => $conversation->id]);
+})->name('chat.new');
+
+// -----------------------------
 // Chat type ChatGPT (Inertia)
 Route::get('/chat', [ConversationController::class, 'index'])->name('chat.index');
 Route::get('/chat/{conversation}', [ConversationController::class, 'show'])->name('chat.show');
@@ -31,45 +49,48 @@ Route::prefix('api/chat')->group(function () {
 
     // 🔹 Nouvelle route pour supprimer une conversation
     Route::delete('/{conversation}', [ConversationController::class, 'destroy'])->name('chat.destroy');
+
+    // 🔹 Nouvelle route pour sauvegarder un message assistant
+    Route::post('/{conversation}/messages/{message}/save', [MessageController::class, 'save']);
 });
 
 // -----------------------------
 // Streaming SSE pour token par token avec 3 assistants
-Route::get('/chat/{conversation}/stream', function($conversationId, Request $request) {
+Route::get('/chat/{conversation}/stream', function ($conversationId, Request $request) {
     $userMessage = $request->query('message', '');
     $botMessageId = $request->query('messageId');
-    $model = $request->query('model', 'CoachCréativité'); // Modèle par défaut
+    $model = $request->query('model', 'CoachCréativité');
 
-    // 🔹 Définition des system prompts fixes pour chaque assistant
     $systemPrompts = [
         'PhilosopheModerne' => "🧠 Tu es Nethra Philosophe. Calme, réflexion profonde, peu d’emojis, analyse et structure les idées.",
         'CoachCréativité'   => "🎨 Tu es Nethra Créatif. Idées originales, métaphores, énergie, propositions multiples.",
         'custom'            => "🧩 Tu suis les instructions personnalisées de l’utilisateur."
     ];
 
-    // Récupère le prompt correspondant au modèle choisi
     $systemPrompt = $systemPrompts[$model] ?? $systemPrompts['CoachCréativité'];
-
-    // Combine le prompt système avec le message utilisateur
     $finalMessage = $systemPrompt . "\n" . $userMessage;
 
     $ai = new \App\Services\OpenAIService();
 
-    return response()->stream(function() use ($ai, $botMessageId, $finalMessage) {
+    return response()->stream(function () use ($ai, $botMessageId, $finalMessage) {
         foreach ($ai->streamResponse($botMessageId, $finalMessage) as $token) {
-            // ⚡ Met à jour le message assistant en base
             \App\Models\Message::where('id', $botMessageId)
                 ->update(['content' => \DB::raw("CONCAT(content, '" . addslashes($token) . "')")]);
 
-            // ⚡ Envoie le token SSE au frontend
             echo "data: " . json_encode(['token' => $token]) . "\n\n";
             ob_flush();
             flush();
         }
+
+        // ✅ Envoie un event de fin pour que le frontend ferme proprement l'EventSource
+        echo "event: end\n";
+        echo "data: {}\n\n";
+        ob_flush();
+        flush();
     }, 200, [
         'Content-Type' => 'text/event-stream',
         'Cache-Control' => 'no-cache',
-        'Connection' => 'keep-alive',
+        'Connection'   => 'keep-alive',
     ]);
 });
 
@@ -80,8 +101,13 @@ Route::post('/settings/instructions', [CustomInstructionController::class, 'upda
 
 // -----------------------------
 // Landing page + Legal
-Route::get('/', function () { return Inertia::render('Landing'); })->name('landing');
-Route::get('/legal', function () { return Inertia::render('Legal'); })->name('legal');
+Route::get('/', function () {
+    return Inertia::render('Landing');
+})->name('landing');
+
+Route::get('/legal', function () {
+    return Inertia::render('Legal');
+})->name('legal');
 
 // -----------------------------
 // Test Inertia

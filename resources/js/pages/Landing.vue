@@ -1,27 +1,46 @@
 <template>
   <HeaderFooterLayout>
-    <!-- HERO -->
     <section
-      id="top"
-      class="relative px-6 py-24 overflow-hidden text-center scroll-mt-24"
-    >
-      <div class="absolute inset-0 bg-gradient-to-b from-[#0F4F8F]/40 to-[#0F0F2F]"></div>
-      <div class="relative z-10">
-        <h1 class="mb-4 text-4xl font-bold md:text-5xl text-[#52c5ff] drop-shadow-lg">
-          Nethra.IA 🟡
-        </h1>
-        <p class="max-w-3xl mx-auto mb-6 text-lg md:text-xl">
-          Ton assistant personnel intelligent pour organiser tes journées,
-          garder le focus et prendre des décisions plus claires.
-        </p>
-        <a
-          href="/chat"
-          class="inline-block px-8 py-4 font-semibold text-black transition bg-[#C96BFF] rounded-xl hover:shadow-[0_0_25px_rgba(201,107,255,0.6)]"
-        >
-          Découvrir Nethra.IA
-        </a>
-      </div>
-    </section>
+  id="top"
+  class="relative px-6 py-16 md:py-16 overflow-hidden text-center scroll-mt-32 bg-cover bg-center"
+  :style="{ backgroundImage: `url(${heroImage})` }"
+>
+  <!-- Overlay -->
+  <div class="absolute inset-0 bg-gradient-to-b from-[#0F4F8F]/40 to-[#0F0F2F]"></div>
+
+  <div class="relative z-10 flex flex-col items-center justify-center">
+    <!-- Logo Nethra -->
+    <img
+      :src="nethraLogo"
+      alt="Nethra Logo"
+      class="w-32 h-32 md:w-40 md:h-40 mb-2 -mt-4"
+    />
+
+    <!-- Titre -->
+    <h1 class="mb-1 text-4xl md:text-5xl font-bold text-[#52c5ff] drop-shadow-lg">
+      Nethra.IA
+    </h1>
+
+    <!-- Description -->
+    <p class="max-w-3xl mx-auto mb-6 text-lg md:text-xl text-[#E0E6F0]">
+      Améliore ton organisation, booste ton focus et prends des décisions avec clarté, grâce à ton assistant personnel Nethra.
+    </p>
+
+    <!-- Bouton avec images corrigé -->
+    <a
+      href="/chat/models"
+      class="inline-block w-48 h-14 md:w-56 md:h-16"
+      @mouseenter="isHovered = true"
+      @mouseleave="isHovered = false"
+      :style="{
+        backgroundImage: `url(${isHovered ? boutonActif : boutonInactif})`,
+        backgroundSize: 'contain',      // <-- correction ici
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }"
+    ></a>
+  </div>
+</section>
 
     <!-- SEPARATEUR -->
     <div class="h-2 bg-gradient-to-r from-[#0F0F2F] via-[#0F4F8F] to-[#0F0F2F]"></div>
@@ -186,9 +205,18 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { ref, reactive } from 'vue'
 import HeaderFooterLayout from '@/layouts/HeaderFooterLayout.vue'
 
+const heroImage = new URL('@/assets/images/hero/banner.jpg', import.meta.url).href
+const nethraLogo = new URL('@/assets/icons/nethra.png', import.meta.url).href
+
+// Bouton
+const isHovered = ref(false)
+const boutonActif = new URL('@/assets/images/buttons/bouton01.png', import.meta.url).href
+const boutonInactif = new URL('@/assets/images/buttons/bouton02.png', import.meta.url).href
+
+// Features
 const featureImages = {
   calendar: new URL('@/assets/images/features/calendar.png', import.meta.url).href,
   brain: new URL('@/assets/images/features/brain.png', import.meta.url).href,
@@ -203,18 +231,21 @@ const features = [
   { icon: featureImages.target, title:'Personnalisation avancée', text:'Ajuste ton assistant selon ton style et tes besoins pour qu’il devienne vraiment personnel.' }
 ]
 
+// Plans
 const plans = [
   { name:'Free', desc:'Découvrir Nethra.IA et ses fonctionnalités de base.', price:'0€/mois', image: new URL('@/assets/images/pricing/free.png', import.meta.url).href },
   { name:'Pro', desc:'Organisation avancée et historique complet.', price:'9,99€/mois', image: new URL('@/assets/images/pricing/pro.png', import.meta.url).href },
   { name:'Enterprise', desc:'Usage professionnel avec support prioritaire.', price:'29,99€/mois', image: new URL('@/assets/images/pricing/enterprise.png', import.meta.url).href }
 ]
 
+// Témoignages
 const testimonials = [
   { text:'Nethra.IA m’aide à organiser mes journées et à rester concentré.', name:'Alice', image: new URL('@/assets/images/testimonials/alice.png', import.meta.url).href },
   { text:'Un assistant clair et simple qui améliore vraiment mon quotidien.', name:'Bob', image: new URL('@/assets/images/testimonials/bob.png', import.meta.url).href },
   { text:'La personnalisation de Nethra.IA fait toute la différence.', name:'Clara', image: new URL('@/assets/images/testimonials/clara.png', import.meta.url).href }
 ]
 
+// FAQ
 const faqs = reactive([
   { icon: new URL('@/assets/icons/faq/question.png', import.meta.url).href, question:'Qu’est-ce que Nethra.IA ?', answer:'Nethra.IA est ton assistant personnel intelligent pour gérer ton organisation et tes priorités quotidiennes.', open:false },
   { icon: new URL('@/assets/icons/faq/settings.png', import.meta.url).href, question:'Comment personnaliser l’assistant ?', answer:'Tu peux ajuster le ton, le style et le comportement directement dans l’interface de Nethra.IA.', open:false },
