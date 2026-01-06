@@ -23,7 +23,6 @@ Route::get('/chat/models', function () {
 // -----------------------------
 // Nouvelle conversation depuis un modèle sélectionné
 Route::get('/chat/new', function () {
-    // Crée une nouvelle conversation et redirige vers la page chat
     $model = session('selectedModel', 'CoachCréativité'); // par défaut
     $conversation = \App\Models\Conversation::create([
         'title' => null,
@@ -50,6 +49,9 @@ Route::prefix('api/chat')->group(function () {
 
     // 🔹 Nouvelle route pour supprimer une conversation
     Route::delete('/{conversation}', [ConversationController::class, 'destroy'])->name('chat.destroy');
+
+    // 🔹 Nouvelle route pour sauvegarder un message assistant
+    Route::post('/{conversation}/messages/{message}/save', [MessageController::class, 'save']);
 });
 
 // -----------------------------
@@ -57,34 +59,34 @@ Route::prefix('api/chat')->group(function () {
 Route::get('/chat/{conversation}/stream', function ($conversationId, Request $request) {
     $userMessage = $request->query('message', '');
     $botMessageId = $request->query('messageId');
-    $model = $request->query('model', 'CoachCréativité'); // Modèle par défaut
+    $model = $request->query('model', 'CoachCréativité');
 
-    // 🔹 Définition des system prompts fixes pour chaque assistant
     $systemPrompts = [
         'PhilosopheModerne' => "🧠 Tu es Nethra Philosophe. Calme, réflexion profonde, peu d’emojis, analyse et structure les idées.",
         'CoachCréativité'   => "🎨 Tu es Nethra Créatif. Idées originales, métaphores, énergie, propositions multiples.",
         'custom'            => "🧩 Tu suis les instructions personnalisées de l’utilisateur."
     ];
 
-    // Récupère le prompt correspondant au modèle choisi
     $systemPrompt = $systemPrompts[$model] ?? $systemPrompts['CoachCréativité'];
-
-    // Combine le prompt système avec le message utilisateur
     $finalMessage = $systemPrompt . "\n" . $userMessage;
 
     $ai = new \App\Services\OpenAIService();
 
     return response()->stream(function () use ($ai, $botMessageId, $finalMessage) {
         foreach ($ai->streamResponse($botMessageId, $finalMessage) as $token) {
-            // ⚡ Met à jour le message assistant en base
             \App\Models\Message::where('id', $botMessageId)
                 ->update(['content' => \DB::raw("CONCAT(content, '" . addslashes($token) . "')")]);
 
-            // ⚡ Envoie le token SSE au frontend
             echo "data: " . json_encode(['token' => $token]) . "\n\n";
             ob_flush();
             flush();
         }
+
+        // ✅ Envoie un event de fin pour que le frontend ferme proprement l'EventSource
+        echo "event: end\n";
+        echo "data: {}\n\n";
+        ob_flush();
+        flush();
     }, 200, [
         'Content-Type' => 'text/event-stream',
         'Cache-Control' => 'no-cache',

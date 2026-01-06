@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import axios from 'axios';
 import HeaderFooterLayout from '@/layouts/HeaderFooterLayout.vue';
 import Conversation from './Conversation.vue';
@@ -67,9 +67,14 @@ async function loadConversation(id: number) {
     loadingConversation.value = true;
     try {
         const res = await axios.get(`/api/chat/${id}`, axiosConfig);
-        activeConversation.value = res.data;
-        if (!activeConversation.value.messages) activeConversation.value.messages = [];
+        const convo = res.data;
+
+        if (!convo.messages) convo.messages = [];
+        activeConversation.value = { ...convo, messages: [...convo.messages] };
+
         activeModel.value = activeConversation.value.model_used || 'gpt-3.5-turbo';
+
+        await nextTick();
     } catch (err) {
         console.error('Erreur fetch conversation :', err);
     } finally {
@@ -166,17 +171,50 @@ onMounted(async () => {
 
     if (initialConversationId) {
         const convo = conversations.value.find(c => c.id === Number(initialConversationId));
-        if (convo) await selectConversation(convo);
-        else await loadConversation(Number(initialConversationId));
-    } else if (initialModelFromUrl) await newConversation();
+        if (convo) {
+            await loadConversation(convo.id);
+        } else {
+            await newConversation();
+            const url = new URL(window.location.href);
+            url.searchParams.delete('conversation_id');
+            url.searchParams.delete('model');
+            window.history.replaceState({}, '', url.toString());
+        }
+    } else if (initialModelFromUrl) {
+        await newConversation();
+        const url = new URL(window.location.href);
+        url.searchParams.delete('model');
+        window.history.replaceState({}, '', url.toString());
+    }
 
     window.addEventListener('message-sent', async (e: any) => {
         const newMessage: MessageType = e.detail;
         if (!activeConversation.value) return;
-        activeConversation.value.messages?.push(newMessage);
-        if (activeConversation.value.messages?.length === 2 && newMessage.role === 'assistant') {
+
+        if (!activeConversation.value.messages) activeConversation.value.messages = [];
+
+        const existing = activeConversation.value.messages.find(m => m.id === newMessage.id);
+        if (existing) existing.content = newMessage.content;
+        else activeConversation.value.messages.push(newMessage);
+
+        await nextTick();
+
+        // 🔹 Si message assistant, sauvegarde immédiate côté serveur
+        if (newMessage.role === 'assistant') {
+            try {
+                await axios.post(
+                    `/api/chat/${activeConversation.value.id}/messages/${newMessage.id}/save`,
+                    { content: newMessage.content },
+                    axiosConfig
+                );
+            } catch (err) {
+                console.error('Erreur sauvegarde message assistant :', err);
+            }
+        }
+
+        if (activeConversation.value.messages.length === 2 && newMessage.role === 'assistant') {
             const firstUserMessage = activeConversation.value.messages[0].content;
-            await generateTitle(activeConversation.value.id, firstUserMessage);
+            generateTitle(activeConversation.value.id, firstUserMessage);
         }
     });
 });
@@ -221,7 +259,6 @@ onMounted(async () => {
               {{ c.title }}
             </span>
 
-            <!-- Bouton remplacé par image poubelle -->
             <button
               @click.stop="deleteConversation(c.id)"
               class="p-1 ml-2 rounded hover:bg-red-500/20"
@@ -255,7 +292,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* Scrollbar personnalisée */
 .dashboard-scroll {
   flex: 1 1 0;
   min-height: 0;
@@ -267,12 +303,10 @@ onMounted(async () => {
 .dashboard-scroll::-webkit-scrollbar {
   width: 8px;
 }
-
 .dashboard-scroll::-webkit-scrollbar-track {
   background: rgba(15,15,47,0.8);
   border-radius: 8px;
 }
-
 .dashboard-scroll::-webkit-scrollbar-thumb {
   background-color: #52c5ff;
   border-radius: 8px;
