@@ -58,7 +58,6 @@ Route::prefix('api/chat')->group(function () {
 // Streaming SSE pour token par token avec 3 assistants
 Route::get('/chat/{conversation}/stream', function ($conversationId, Request $request) {
     $userMessage = $request->query('message', '');
-    $botMessageId = $request->query('messageId');
     $model = $request->query('model', 'CoachCréativité');
 
     $systemPrompts = [
@@ -72,21 +71,9 @@ Route::get('/chat/{conversation}/stream', function ($conversationId, Request $re
 
     $ai = new \App\Services\OpenAIService();
 
-    return response()->stream(function () use ($ai, $botMessageId, $finalMessage) {
-        foreach ($ai->streamResponse($botMessageId, $finalMessage) as $token) {
-            \App\Models\Message::where('id', $botMessageId)
-                ->update(['content' => \DB::raw("CONCAT(content, '" . addslashes($token) . "')")]);
-
-            echo "data: " . json_encode(['token' => $token]) . "\n\n";
-            ob_flush();
-            flush();
-        }
-
-        // ✅ Envoie un event de fin pour que le frontend ferme proprement l'EventSource
-        echo "event: end\n";
-        echo "data: {}\n\n";
-        ob_flush();
-        flush();
+    return response()->stream(function () use ($ai, $conversationId, $finalMessage) {
+        // ✅ Appel du service corrigé pour permettre plusieurs messages sans bloquer
+        $ai->streamResponse($conversationId, $finalMessage);
     }, 200, [
         'Content-Type' => 'text/event-stream',
         'Cache-Control' => 'no-cache',
@@ -113,4 +100,10 @@ Route::get('/legal', function () {
 // Test Inertia
 Route::get('/hello', function () {
     return Inertia::render('Hello', ['message' => 'Hello World from Laravel + Inertia!']);
+});
+
+Route::get('/test-bot', function () {
+    $ai = new \App\Services\OpenAIService();
+    $ai->streamResponse(1, "Bonjour Nethra");
+    return response()->json(['status' => 'done']);
 });

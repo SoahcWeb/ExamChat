@@ -12,7 +12,7 @@ import imgPersonnalise from '@/assets/images/models/nethra-personnalise.png'
 interface Message {
   id: number
   role: 'user' | 'assistant'
-  content: string | null // ✅ autorise null pour le streaming initial
+  content: string | null
 }
 
 const props = defineProps<{
@@ -24,14 +24,14 @@ const props = defineProps<{
   }
 }>()
 
-// ✅ Ref locale pour messages
-const messages = ref([...props.conversation.messages || []])
+// Ref locale pour messages
+const messages = ref<Message[]>([...(props.conversation.messages || [])])
 
-// 🔹 Synchronisation automatique à chaque changement de conversation
+// Synchronisation automatique à chaque changement de conversation
 watch(
-  () => props.conversation,
-  (newConvo) => {
-    messages.value = [...newConvo.messages || []]
+  () => props.conversation.messages,
+  (newMessages) => {
+    messages.value = [...newMessages]
     nextTick(scrollToBottom)
   },
   { deep: true, immediate: true }
@@ -81,27 +81,21 @@ function scrollToBottom() {
       class="flex w-full"
       :class="m.role === 'user' ? 'justify-start' : 'justify-end'"
     >
+      <!-- Message utilisateur -->
       <div
         v-if="m.role === 'user'"
         class="max-w-[70%] p-3 rounded-xl bg-[#1A1A3C] text-[#52c5ff]"
       >
-        <div v-html="md.render(m.content || '')"></div> <!-- ✅ safe render -->
+        <div v-html="md.render(m.content || '')"></div>
       </div>
 
-      <div
-        v-else
-        class="flex items-start gap-3 max-w-[70%]"
-      >
+      <!-- Message assistant -->
+      <div v-else class="flex items-start gap-3 max-w-[70%]">
         <div class="w-8 h-8 rounded-full overflow-hidden border border-[#C96BFF] shrink-0">
-          <img
-            :src="assistantAvatar()"
-            alt="Assistant"
-            class="object-cover w-full h-full"
-          />
+          <img :src="assistantAvatar()" alt="Assistant" class="object-cover w-full h-full" />
         </div>
-
         <div class="p-3 rounded-xl bg-[#2A1F3D] text-[#C96BFF]">
-          <div v-html="md.render(m.content || '')"></div> <!-- ✅ safe render -->
+          <div v-html="md.render(m.content || '')"></div>
         </div>
       </div>
     </div>
@@ -135,6 +129,7 @@ function scrollToBottom() {
   border-radius: 8px;
   border: 2px solid rgba(15, 15, 47, 0.8);
 }
+
 .dashboard-scroll {
   scrollbar-width: thin;
   scrollbar-color: #52c5ff rgba(15, 15, 47, 0.8);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, nextTick } from 'vue';
 import axios from 'axios';
 
 interface MessageType {
@@ -44,7 +44,7 @@ async function sendMessage() {
     // ⚡ Crée user + assistant en une seule requête
     const res = await axios.post(`/api/chat/${props.conversation.id}/messages`, {
       content: userText,
-      role: 'user' // on envoie que user, backend crée le bot vide
+      role: 'user'
     }, axiosConfig);
 
     userMessage = res.data.userMessage;
@@ -89,32 +89,32 @@ function streamAssistantMessage(botMessageId: number, userText: string) {
       }
       msg.content = partialMessage;
 
-      // Dispatcher l'événement pour d'autres composants (comme Conversation.vue)
-      window.dispatchEvent(
-        new CustomEvent('message-sent', {
-          detail: { id: botMessageId, role: 'assistant', content: partialMessage }
-        })
-      );
-
       await nextTick();
     } catch (err) {
       console.error('Erreur traitement SSE :', err);
     }
   };
 
-  // ✅ Corrige le log "Erreur SSE" inutile
-  eventSource.onerror = (err) => {
-    if (eventSource.readyState !== EventSource.CLOSED) {
-      console.error('Erreur SSE streaming assistant :', err);
+  // 🔹 Quand le flux SSE se termine, sauvegarder le message complet
+  eventSource.addEventListener('end', async () => {
+    try {
+      await axios.post(
+        `/api/chat/${props.conversation.id}/messages/${botMessageId}/save`,
+        { content: partialMessage },
+        axiosConfig
+      );
+    } catch (err) {
+      console.error('Erreur sauvegarde finale message assistant :', err);
+    } finally {
+      sending.value = false; // 🔹 Permet d’envoyer un nouveau message
+      eventSource.close();
     }
+  });
+
+  eventSource.onerror = () => {
     sending.value = false;
     eventSource.close();
   };
-
-  eventSource.addEventListener('end', () => {
-    sending.value = false;
-    eventSource.close();
-  });
 }
 </script>
 
