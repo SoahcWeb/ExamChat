@@ -1,46 +1,46 @@
 <template>
   <HeaderFooterLayout>
     <section
-  id="top"
-  class="relative px-6 py-16 md:py-16 overflow-hidden text-center scroll-mt-32 bg-cover bg-center"
-  :style="{ backgroundImage: `url(${heroImage})` }"
->
-  <!-- Overlay -->
-  <div class="absolute inset-0 bg-gradient-to-b from-[#0F4F8F]/40 to-[#0F0F2F]"></div>
+      id="top"
+      class="relative px-6 py-16 overflow-hidden text-center bg-center bg-cover md:py-16 scroll-mt-32"
+      :style="{ backgroundImage: `url(${heroImage})` }"
+    >
+      <!-- Overlay -->
+      <div class="absolute inset-0 bg-gradient-to-b from-[#0F4F8F]/40 to-[#0F0F2F]"></div>
 
-  <div class="relative z-10 flex flex-col items-center justify-center">
-    <!-- Logo Nethra -->
-    <img
-      :src="nethraLogo"
-      alt="Nethra Logo"
-      class="w-32 h-32 md:w-40 md:h-40 mb-2 -mt-4"
-    />
+      <div class="relative z-10 flex flex-col items-center justify-center">
+        <!-- Logo Nethra -->
+        <img
+          :src="nethraLogo"
+          alt="Nethra Logo"
+          class="w-32 h-32 mb-2 -mt-4 md:w-40 md:h-40"
+        />
 
-    <!-- Titre -->
-    <h1 class="mb-1 text-4xl md:text-5xl font-bold text-[#52c5ff] drop-shadow-lg">
-      Nethra.IA
-    </h1>
+        <!-- Titre -->
+        <h1 class="mb-1 text-4xl md:text-5xl font-bold text-[#52c5ff] drop-shadow-lg">
+          Nethra.IA
+        </h1>
 
-    <!-- Description -->
-    <p class="max-w-3xl mx-auto mb-6 text-lg md:text-xl text-[#E0E6F0]">
-      Améliore ton organisation, booste ton focus et prends des décisions avec clarté, grâce à ton assistant personnel Nethra.
-    </p>
+        <!-- Description -->
+        <p class="max-w-3xl mx-auto mb-6 text-lg md:text-xl text-[#E0E6F0]">
+          Améliore ton organisation, booste ton focus et prends des décisions avec clarté, grâce à ton assistant personnel Nethra.
+        </p>
 
-    <!-- Bouton avec images corrigé -->
-    <a
-      href="/chat/models"
-      class="inline-block w-48 h-14 md:w-56 md:h-16"
-      @mouseenter="isHovered = true"
-      @mouseleave="isHovered = false"
-      :style="{
-        backgroundImage: `url(${isHovered ? boutonActif : boutonInactif})`,
-        backgroundSize: 'contain',      // <-- correction ici
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }"
-    ></a>
-  </div>
-</section>
+        <!-- Bouton avec images corrigé -->
+        <a
+          href="/chat/models"
+          class="inline-block w-48 h-14 md:w-56 md:h-16"
+          @mouseenter="isHovered = true"
+          @mouseleave="isHovered = false"
+          :style="{
+            backgroundImage: `url(${isHovered ? boutonActif : boutonInactif})`,
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }"
+        ></a>
+      </div>
+    </section>
 
     <!-- SEPARATEUR -->
     <div class="h-2 bg-gradient-to-r from-[#0F0F2F] via-[#0F4F8F] to-[#0F0F2F]"></div>
@@ -208,50 +208,44 @@
 import { ref, reactive } from 'vue'
 import HeaderFooterLayout from '@/layouts/HeaderFooterLayout.vue'
 
-const heroImage = new URL('@/assets/images/hero/banner.jpg', import.meta.url).href
-const nethraLogo = new URL('@/assets/icons/nethra.png', import.meta.url).href
+import {
+  heroImage, nethraLogo,
+  boutonActif, boutonInactif,
+  featureIcons, pricingImages, testimonialImages, faqIcons
+} from '@/constants/images.js'
 
 // Bouton
 const isHovered = ref(false)
-const boutonActif = new URL('@/assets/images/buttons/bouton01.png', import.meta.url).href
-const boutonInactif = new URL('@/assets/images/buttons/bouton02.png', import.meta.url).href
 
 // Features
-const featureImages = {
-  calendar: new URL('@/assets/images/features/calendar.png', import.meta.url).href,
-  brain: new URL('@/assets/images/features/brain.png', import.meta.url).href,
-  lightning: new URL('@/assets/images/features/lightning.png', import.meta.url).href,
-  target: new URL('@/assets/images/features/target.png', import.meta.url).href
-}
-
 const features = [
-  { icon: featureImages.calendar, title:'Organisation du planning', text:'Structure tes journées et priorités pour rester concentré sur l’essentiel.' },
-  { icon: featureImages.brain, title:'Contexte intelligent', text:'Nethra.IA se souvient de tes échanges pour des réponses cohérentes et personnalisées.' },
-  { icon: featureImages.lightning, title:'Réponses en temps réel', text:'Reçois les réponses de ton assistant instantanément, comme si tu discutais avec un humain.' },
-  { icon: featureImages.target, title:'Personnalisation avancée', text:'Ajuste ton assistant selon ton style et tes besoins pour qu’il devienne vraiment personnel.' }
+  { icon: featureIcons.calendar, title:'Organisation du planning', text:'Structure tes journées et priorités pour rester concentré sur l’essentiel.' },
+  { icon: featureIcons.brain, title:'Contexte intelligent', text:'Nethra.IA se souvient de tes échanges pour des réponses cohérentes et personnalisées.' },
+  { icon: featureIcons.lightning, title:'Réponses en temps réel', text:'Reçois les réponses de ton assistant instantanément, comme si tu discutais avec un humain.' },
+  { icon: featureIcons.target, title:'Personnalisation avancée', text:'Ajuste ton assistant selon ton style et tes besoins pour qu’il devienne vraiment personnel.' }
 ]
 
 // Plans
 const plans = [
-  { name:'Free', desc:'Découvrir Nethra.IA et ses fonctionnalités de base.', price:'0€/mois', image: new URL('@/assets/images/pricing/free.png', import.meta.url).href },
-  { name:'Pro', desc:'Organisation avancée et historique complet.', price:'9,99€/mois', image: new URL('@/assets/images/pricing/pro.png', import.meta.url).href },
-  { name:'Enterprise', desc:'Usage professionnel avec support prioritaire.', price:'29,99€/mois', image: new URL('@/assets/images/pricing/enterprise.png', import.meta.url).href }
+  { name:'Free', desc:'Découvrir Nethra.IA et ses fonctionnalités de base.', price:'0€/mois', image: pricingImages.free },
+  { name:'Pro', desc:'Organisation avancée et historique complet.', price:'9,99€/mois', image: pricingImages.pro },
+  { name:'Enterprise', desc:'Usage professionnel avec support prioritaire.', price:'29,99€/mois', image: pricingImages.enterprise }
 ]
 
 // Témoignages
 const testimonials = [
-  { text:'Nethra.IA m’aide à organiser mes journées et à rester concentré.', name:'Alice', image: new URL('@/assets/images/testimonials/alice.png', import.meta.url).href },
-  { text:'Un assistant clair et simple qui améliore vraiment mon quotidien.', name:'Bob', image: new URL('@/assets/images/testimonials/bob.png', import.meta.url).href },
-  { text:'La personnalisation de Nethra.IA fait toute la différence.', name:'Clara', image: new URL('@/assets/images/testimonials/clara.png', import.meta.url).href }
+  { text:'Nethra.IA m’aide à organiser mes journées et à rester concentré.', name:'Alice', image: testimonialImages.alice },
+  { text:'Un assistant clair et simple qui améliore vraiment mon quotidien.', name:'Bob', image: testimonialImages.bob },
+  { text:'La personnalisation de Nethra.IA fait toute la différence.', name:'Clara', image: testimonialImages.clara }
 ]
 
 // FAQ
 const faqs = reactive([
-  { icon: new URL('@/assets/icons/faq/question.png', import.meta.url).href, question:'Qu’est-ce que Nethra.IA ?', answer:'Nethra.IA est ton assistant personnel intelligent pour gérer ton organisation et tes priorités quotidiennes.', open:false },
-  { icon: new URL('@/assets/icons/faq/settings.png', import.meta.url).href, question:'Comment personnaliser l’assistant ?', answer:'Tu peux ajuster le ton, le style et le comportement directement dans l’interface de Nethra.IA.', open:false },
-  { icon: new URL('@/assets/icons/faq/money.png', import.meta.url).href, question:'Y a-t-il une version gratuite ?', answer:'Oui, la formule Free permet de découvrir toutes les fonctionnalités de base sans limite de temps.', open:false },
-  { icon: new URL('@/assets/icons/faq/calendar.png', import.meta.url).href, question:'Puis-je synchroniser Nethra.IA avec mon calendrier ?', answer:'Oui, Nethra.IA peut s’intégrer avec les principaux calendriers pour organiser tes journées.', open:false },
-  { icon: new URL('@/assets/icons/faq/lock.png', import.meta.url).href, question:'Mes données sont-elles sécurisées ?', answer:'Toutes tes données sont protégées et utilisées uniquement pour améliorer ton expérience avec l’assistant.', open:false }
+  { icon: faqIcons.question, question:'Qu’est-ce que Nethra.IA ?', answer:'Nethra.IA est ton assistant personnel intelligent pour gérer ton organisation et tes priorités quotidiennes.', open:false },
+  { icon: faqIcons.settings, question:'Comment personnaliser l’assistant ?', answer:'Tu peux ajuster le ton, le style et le comportement directement dans l’interface de Nethra.IA.', open:false },
+  { icon: faqIcons.money, question:'Y a-t-il une version gratuite ?', answer:'Oui, la formule Free permet de découvrir toutes les fonctionnalités de base sans limite de temps.', open:false },
+  { icon: faqIcons.calendar, question:'Puis-je synchroniser Nethra.IA avec mon calendrier ?', answer:'Oui, Nethra.IA peut s’intégrer avec les principaux calendriers pour organiser tes journées.', open:false },
+  { icon: faqIcons.lock, question:'Mes données sont-elles sécurisées ?', answer:'Toutes tes données sont protégées et utilisées uniquement pour améliorer ton expérience avec l’assistant.', open:false }
 ])
 </script>
 

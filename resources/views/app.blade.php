@@ -9,7 +9,23 @@
 
     <title inertia>{{ config('app.name', 'Mini ChatGPT') }}</title>
 
-    @vite('resources/js/app.ts')
+    @if(app()->environment('local'))
+        <!-- Développement : Vite direct -->
+        @vite('resources/js/app.ts')
+    @else
+        <!-- Production : fichiers buildés Vite -->
+        @php
+            $manifest = json_decode(file_get_contents(public_path('build/manifest.json')), true);
+        @endphp
+
+        @if(isset($manifest['resources/js/app.ts']))
+            @foreach($manifest['resources/js/app.ts']['css'] ?? [] as $cssFile)
+                <link rel="stylesheet" href="{{ asset('build/' . $cssFile) }}">
+            @endforeach
+            <script type="module" src="{{ asset('build/' . $manifest['resources/js/app.ts']['file']) }}"></script>
+        @endif
+    @endif
+
     @inertiaHead
 </head>
 <body class="bg-gray-100">

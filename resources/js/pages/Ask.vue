@@ -1,5 +1,59 @@
+<script>
+import axios from 'axios';
+import { askImages } from '@/constants/images.js';
+
+export default {
+    data() {
+        return {
+            question: '',
+            response: null,
+            models: [],
+            selectedModel: null,
+            askImages,
+        };
+    },
+    async created() {
+        try {
+            const res = await axios.get('/ask/models');
+            this.models = res.data.models;
+
+            if (this.models.length) {
+                this.selectedModel = this.models[0].id;
+            }
+        } catch (err) {
+            console.error('Erreur lors du chargement des modèles :', err);
+        }
+    },
+    methods: {
+        async sendQuestion() {
+            if (!this.question || !this.selectedModel) return;
+
+            try {
+                const res = await axios.post('/ask', {
+                    question: this.question,
+                    model: this.selectedModel,
+                });
+
+                this.response = res.data.response;
+            } catch (err) {
+                console.error(err);
+                alert('Erreur lors de l’envoi de la question.');
+            }
+        },
+    },
+};
+</script>
+
 <template>
     <div>
+
+        <!-- Image header -->
+        <img
+            :src="askImages.header"
+            alt="Ask Header"
+            style="width: 100%; max-height: 200px; object-fit: cover; margin-bottom: 15px;"
+        />
+
         <h1>Mini ChatGPT (Vue)</h1>
 
         <!-- Choix du modèle -->
@@ -21,6 +75,7 @@
             v-model="question"
             placeholder="Pose ta question ici..."
         ></textarea>
+
         <button @click="sendQuestion">Envoyer</button>
 
         <!-- Réponse -->
@@ -28,54 +83,9 @@
             <h2>Réponse :</h2>
             <pre>{{ response }}</pre>
         </div>
+
     </div>
 </template>
-
-<script>
-import axios from 'axios';
-
-export default {
-    data() {
-        return {
-            question: '',
-            response: null,
-            models: [],
-            selectedModel: null,
-        };
-    },
-    async created() {
-        try {
-            // Charger les modèles disponibles depuis le backend
-            const res = await axios.get('/ask/models');
-            this.models = res.data.models;
-
-            // Sélectionner le premier modèle par défaut
-            if (this.models.length) {
-                this.selectedModel = this.models[0].id;
-            }
-        } catch (err) {
-            console.error('Erreur lors du chargement des modèles :', err);
-        }
-    },
-    methods: {
-        async sendQuestion() {
-            if (!this.question || !this.selectedModel) return;
-
-            try {
-                const res = await axios.post('/ask', {
-                    question: this.question,
-                    model: this.selectedModel,
-                });
-                // Récupérer uniquement le texte renvoyé par l'IA
-                this.response = res.data.response;
-            } catch (err) {
-                console.error(err);
-                alert('Erreur lors de l’envoi de la question.');
-            }
-        },
-    },
-};
-</script>
 
 <style scoped>
 textarea {
